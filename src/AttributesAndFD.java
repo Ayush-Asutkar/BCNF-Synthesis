@@ -43,9 +43,14 @@ public class AttributesAndFD {
 
     //3NF Synthesis with DP preserving
     public ArrayList<Attributes> bcnfSynthesis() {
+        /**
+         * Set D = {R}*/
+        ArrayList<Attributes> decomposition = new ArrayList<>();
+        decomposition.add(this.attributes);
 
 
-        return null;
+
+        return decomposition;
     }
 
     private String minLengthAttributeFinder(HashSet<String> attSet) {
