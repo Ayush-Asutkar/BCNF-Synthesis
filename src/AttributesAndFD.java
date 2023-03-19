@@ -1,6 +1,4 @@
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Scanner;
+import java.util.*;
 
 public class AttributesAndFD {
     private int sizeFD;
@@ -45,12 +43,110 @@ public class AttributesAndFD {
     public ArrayList<Attributes> bcnfSynthesis() {
         /**
          * Set D = {R}*/
-        ArrayList<Attributes> decomposition = new ArrayList<>();
-        decomposition.add(this.attributes);
+        HashMap<String, ArrayList<FunctionalDependency>> decomposition = new HashMap<>();
+        String attrString = StringFunctionHelper.convertSetToString(this.attributes.getAttributes());
+        decomposition.put(attrString, this.functionalDependencies);
+
+        /**
+         * While there is a relation schema Q in D that is not in BCNF
+         * do {
+         ****** choose a relation schema Q in D that is not in BCNF;
+         ****** find a functional dependency X->Y in Q that violated BCNF;
+         ****** replace Q in D by two relation schemas (Q-Y) and (X u Y);
+         *}*/
+
+        boolean bcnf = false;
+        while(!bcnf) {
+            bcnf = true;
+
+            for(Map.Entry<String, ArrayList<FunctionalDependency>> entry: decomposition.entrySet()) {
+                //check if this entry is in bcnf
+                String currAttr = entry.getKey();
+                ArrayList<FunctionalDependency> fds = entry.getValue();
+
+                // TODO: 19-03-2023 Complete bcnfChecker and get back here
+                FunctionalDependency violatedFD = bcnfChecker(currAttr, fds);
+                if(violatedFD != null) {
+                    //we got a fd which violated bcnf
+                    //replace the current entry with
+                    // => currAttr - violatedFD.getRight()
+                    // => violatedFD.getLeft() and violatedFD.getLeft()
+
+                    bcnf = false;
 
 
+                }
+            }
+        }
 
-        return decomposition;
+
+        return null;
+    }
+
+    //returns null if given input is in bcnf,
+    //otherwise returns the functional dependency which violates bcnf
+    private FunctionalDependency bcnfChecker(String attr, ArrayList<FunctionalDependency> fds) {
+        String attrSorted = StringFunctionHelper.sortString(attr);
+
+        //for every functional dependency, X->Y X should be super key
+        for(FunctionalDependency currFD: fds) {
+            String left = currFD.getLeft();
+
+            //find closure of this with respect to fds
+            String closureString = closure(left, fds);
+            String closureSorted = StringFunctionHelper.sortString(closureString);
+
+            if(!attrSorted.equals(closureSorted)) {
+                //is not a super key
+                return currFD;
+            }
+        }
+        return null;
+    }
+
+    private static String closure(String attr, ArrayList<FunctionalDependency> fd) {
+        /**
+         * X+ := X
+         * repeat
+         ****** oldX+ := X+
+         ****** for each functional dependency Y->Z in F do
+         ************* if X+ is subset of Y then X+:= X+ union Z
+         * until (X+ = oldX+)*/
+
+
+        HashSet<Character> result = new HashSet<>();
+
+        for(int i=0; i<attr.length(); i++) {
+            result.add(attr.charAt(i));
+        }
+
+        boolean modified = true;
+        while(modified) {
+            modified = false;
+
+            for(FunctionalDependency currFD: fd) {
+//                System.out.println("Checking - " + currFD);
+                String left = currFD.getLeft();
+
+                String resultString = StringFunctionHelper.convertSetToString(result);
+
+                //check if result string contains left string
+                if(StringFunctionHelper.stringContainsCharacters(resultString,left)) {
+                    char[] rightArr = currFD.getRight().toCharArray();
+
+                    for(char ch: rightArr) {
+                        if (!result.contains(ch)) {
+                            result.add(ch);
+                            modified = true;
+                        }
+                    }
+                }
+
+//                System.out.println("Result after checking the above fd " + result);
+            }
+        }
+
+        return StringFunctionHelper.convertSetToString(result);
     }
 
     private String minLengthAttributeFinder(HashSet<String> attSet) {
@@ -221,51 +317,6 @@ public class AttributesAndFD {
         }
 
         return true;
-    }
-
-    private static String closure(String attr, ArrayList<FunctionalDependency> fd) {
-        /**
-         * X+ := X
-         * repeat
-         ****** oldX+ := X+
-         ****** for each functional dependency Y->Z in F do
-         ************* if X+ is subset of Y then X+:= X+ union Z
-         * until (X+ = oldX+)*/
-
-
-        HashSet<Character> result = new HashSet<>();
-
-        for(int i=0; i<attr.length(); i++) {
-            result.add(attr.charAt(i));
-        }
-
-        boolean modified = true;
-        while(modified) {
-            modified = false;
-
-            for(FunctionalDependency currFD: fd) {
-//                System.out.println("Checking - " + currFD);
-                String left = currFD.getLeft();
-
-                String resultString = StringFunctionHelper.convertSetToString(result);
-
-                //check if result string contains left string
-                if(StringFunctionHelper.stringContainsCharacters(resultString,left)) {
-                    char[] rightArr = currFD.getRight().toCharArray();
-
-                    for(char ch: rightArr) {
-                        if (!result.contains(ch)) {
-                            result.add(ch);
-                            modified = true;
-                        }
-                    }
-                }
-
-//                System.out.println("Result after checking the above fd " + result);
-            }
-        }
-
-        return StringFunctionHelper.convertSetToString(result);
     }
 
     @Override
