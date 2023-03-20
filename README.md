@@ -1,4 +1,4 @@
-# Lossless Join Testing
+# BCNF Synthesis
 
 ----
 
