@@ -75,12 +75,22 @@ public class AttributesAndFD {
                     String firstStringToAdd = stringSubtraction(currAttr, violatedFD.getRight());
                     String secondStringToAdd = stringUnion(violatedFD.getLeft(), violatedFD.getRight());
 
-                    ArrayList<FunctionalDependency> firstFD = getFDwrtAttr(firstStringToAdd, fds);
-                    ArrayList<FunctionalDependency> secondFD = getFDwrtAttr(secondStringToAdd, fds);
+                    ArrayList<FunctionalDependency> firstFD = getFDwrtAttr(firstStringToAdd, this.functionalDependencies);
+                    ArrayList<FunctionalDependency> secondFD = getFDwrtAttr(secondStringToAdd, this.functionalDependencies);
 
+                    //Testing
 //                    System.out.println("Violated fd = " + violatedFD);
 //                    System.out.println("firstStringToAdd = " + firstStringToAdd);
+//                    for(FunctionalDependency fd: firstFD) {
+//                        System.out.println(fd);
+//                    }
+//
 //                    System.out.println("secondStringToAdd = " + secondStringToAdd);
+//
+//                    for(FunctionalDependency fd: secondFD) {
+//                        System.out.println(fd);
+//                    }
+
                     decomposition.put(firstStringToAdd, firstFD);
                     decomposition.put(secondStringToAdd, secondFD);
                     decomposition.remove(entry.getKey());
@@ -100,38 +110,81 @@ public class AttributesAndFD {
             result.add(attr);
         }
 
+        String attr = StringFunctionHelper.convertSetToString(this.attributes.getAttributes());
+        if(decompositionContainEverything(attr, result)) {
+            ArrayList<Attributes> newResult = new ArrayList<>();
+            newResult.add(this.attributes);
+            return newResult;
+        }
 
         return result;
     }
 
-    //will return list of functional dependency which are valid for the given set of attributes
-    private ArrayList<FunctionalDependency> getFDwrtAttr(String attrString, ArrayList<FunctionalDependency> fds) {
-        Attributes attr = StringFunctionHelper.convertStringToAttributes(attrString);
-        ArrayList<FunctionalDependency> result = new ArrayList<>();
-
-        for(FunctionalDependency fd: fds) {
-            String left = fd.getLeft();
-            String right = fd.getRight();
-
+    private static boolean decompositionContainEverything(String attr, ArrayList<Attributes> decomposition) {
+        for(Attributes dec: decomposition) {
             boolean value = true;
-            for(int i=0; i<left.length(); i++) {
-                if(!attr.contains(left.charAt(i))) {
-                    value = false;
-                    break;
-                }
-            }
-
-            for(int i=0; i<right.length(); i++) {
-                if(!attr.contains(right.charAt(i))) {
+            for(int i=0; i<attr.length(); i++) {
+                if (!dec.contains(attr.charAt(i))) {
                     value = false;
                     break;
                 }
             }
 
             if(value) {
-                result.add(fd);
+                return true;
             }
         }
+
+        return false;
+    }
+
+    //will return list of functional dependency which are valid for the given set of attributes
+    private ArrayList<FunctionalDependency> getFDwrtAttr(String attrString, ArrayList<FunctionalDependency> fds) {
+        ArrayList<FunctionalDependency> result = new ArrayList<>();
+
+        String sortedAttr = StringFunctionHelper.sortString(attrString);
+        int length = sortedAttr.length();
+
+        for(int i=0; i<(1<<length); i++) {
+            StringBuilder stringBuilder = new StringBuilder();
+            for(int j=0; j<length; j++) {
+                if(((i>>j) % 2 == 1)) {
+                    stringBuilder.append(sortedAttr.charAt(j));
+                }
+            }
+            String currAttr = stringBuilder.toString();
+
+            String closureString = closure(currAttr, fds);
+
+            HashSet<Character> charThatShouldBeThere = new HashSet<>();
+            for(int j=0; j<sortedAttr.length(); j++) {
+                charThatShouldBeThere.add(sortedAttr.charAt(j));
+            }
+
+            HashSet<Character> charThatShouldNotBeThere = new HashSet<>();
+            for(int j=0; j<currAttr.length(); j++) {
+                charThatShouldNotBeThere.add(currAttr.charAt(j));
+            }
+//            System.out.println("charThatShouldBeThere = " + charThatShouldBeThere);
+//            System.out.println("charThatShouldNotBeThere = " + charThatShouldNotBeThere);
+
+            StringBuilder rightOfFD = new StringBuilder();
+            for(int j=0; j<closureString.length(); j++) {
+                char ch = closureString.charAt(j);
+                if(charThatShouldBeThere.contains(ch)) {
+                    if(!charThatShouldNotBeThere.contains(ch)) {
+                        rightOfFD.append(ch);
+                    }
+                }
+            }
+
+            String rightString = rightOfFD.toString();
+            if(rightString.length() != 0) {
+                FunctionalDependency fdToAdd = new FunctionalDependency(currAttr,rightString);
+                result.add(fdToAdd);
+            }
+        }
+
         return result;
     }
 

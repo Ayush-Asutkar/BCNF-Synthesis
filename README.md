@@ -22,3 +22,8 @@
 
 ## Output format:
 A relational decomposition showing BCNF synthesis.
+
+## Screenshot of output:
+1. Example - 1<br/><img src="IO_Images/Example1.png" alt="Example 1">
+2. Example - 2<br/><img src="IO_Images/Example2.png" alt="Example 2">
+3. Example - 3<br/><img src="IO_Images/Example3.png" alt="Example 3">

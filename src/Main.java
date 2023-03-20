@@ -39,15 +39,21 @@ public class Main {
 
 
         //3NF Synthesis with DP
-        System.out.println(Colors.ANSI_YELLOW + "Performing BNCF Synthesis with0 Lossless Join property");
+        System.out.println(Colors.ANSI_YELLOW + "Performing BNCF Synthesis with Lossless Join property");
 
         ArrayList<Attributes> synthesis = attributesFD.bcnfSynthesis();
 
-        System.out.println(Colors.ANSI_BLUE + "Following is the decomposition");
-        int num = 1;
-        for(Attributes att: synthesis) {
-            System.out.println("R" + num + " => " + att.getAttributes());
-            num++;
+        if(synthesis.size() == 1) {
+            //already in 3NF
+            System.out.println(Colors.ANSI_BLUE + "Given decomposition is already in BCNF");
+            System.out.println(synthesis.get(0).getAttributes());
+        } else {
+            System.out.println(Colors.ANSI_BLUE + "Following is the decomposition");
+            int num = 1;
+            for(Attributes att: synthesis) {
+                System.out.println("R" + num + " => " + att.getAttributes());
+                num++;
+            }
         }
     }
 }
